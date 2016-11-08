@@ -1,12 +1,37 @@
 $gulp-blue: #3a455d;
 $white: #ffffff;
+$athens-gray: #eef1f3;
+$athens-gray-dark: #dcdfe1;
+$limeade: #75b800;
 
 body {
+  margin: 0;
+  height: 100vh;
   background-color: $gulp-blue;
   font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
   font-weight: 300;
 }
 
-h1 {
-  color: $white;
+.countdown {
+  display: none;
+  max-width: 90vw;
+  max-height: 90vh;
+  margin: 0 auto;
+  padding: 5vh 5vw;
+
+  svg {
+    display: block;
+    height: 100%;
+    margin: 0 auto;
+  }
+
+  .circle {
+    fill: transparent;
+    stroke: $white;
+    stroke-width: 7;
+    stroke-dasharray: 612;
+    stroke-dashoffset: 612;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, opacity 1s linear;
+  }
 }
