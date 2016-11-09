@@ -12,26 +12,30 @@ body {
   font-weight: 300;
 }
 
-.countdown {
-  display: none;
-  max-width: 90vw;
-  max-height: 90vh;
-  margin: 0 auto;
-  padding: 5vh 5vw;
+@import "timer";
 
-  svg {
-    display: block;
-    height: 100%;
-    margin: 0 auto;
+.token-wrapper {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin-left: -100px;
+  margin-top: -50px;
+  width: 200px;
+  height: 100px;
+  text-align: center;
+  line-height: 100px;
+
+  background-color: green;
+
+  .token {
+    margin: 0;
   }
 
-  .circle {
-    fill: transparent;
-    stroke: $white;
-    stroke-width: 7;
-    stroke-dasharray: 612;
-    stroke-dashoffset: 612;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 1s linear, opacity 1s linear;
+  .secret {
+    display: none;
+  }
+  .error {
+    display: none;
+    color: #e16057;
   }
 }

@@ -1,113 +1,67 @@
-import base32 from 'base32'
-import Promise from 'bluebird'
+import Crypto from './Crypto'
+import Timer from './Timer'
 
 class Authenticator {
   constructor () {
-    this.crypto = window.crypto || window.msCrypto
-    this.algo = { name: 'HMAC', hash: { name: 'SHA-1' } }
-    this.extractable = true
-    this.keyUsages = ['sign', 'verify']
-    this.period = 30
-    this.window = 1
+    this.period = 10
+    this.crypto = new Crypto()
+    this.timer = new Timer(this.period)
+    this.$secret = $('.secret')
+    this.$token = $('.token')
   }
 
-  generateKey () {
-    return this.crypto.subtle.generateKey(this.algo, this.extractable, this.keyUsages)
-  }
+  start () {
+    this.crypto.generateKey().then(key => {
+      this.key = key
+      const percentage = this.getPercentage()
+      const currentStep = percentage * this.period / 100
+      this.timer.setStep(Math.ceil(currentStep))
+      const delay = (1 - (currentStep % 1)) * 1000
 
-  importKey (buffer) {
-    return this.crypto.subtle.importKey('raw', buffer, this.algo, this.extractable, this.keyUsages)
-  }
+      console.log(percentage)
+      console.log(currentStep)
+      console.log(Math.ceil(currentStep))
+      console.log(delay)
 
-  exportKey (key) {
-    return this.crypto.subtle.exportKey('raw', key)
-  }
+      setTimeout(() => {
+        this.timer.start()
+        this.refreshToken()
+        setInterval(() => {
+          this.refreshToken()
+        }, this.period * 1000)
+      }, delay)
 
-  sign (key, data) {
-    return this.crypto.subtle.sign({ name: 'HMAC', }, key, data)
-  }
+      this.refreshToken()
 
-  verify (key, signature, data) {
-    return this.crypto.subtle.verify({ name: 'HMAC', }, key, signature, data)
-  }
+      this.crypto.exportKey(key).then(keydata => {
+        this.secret = this.crypto.encodeKey(keydata)
+        this.$secret.text(this.secret)
+      })
+    })
 
-  encodeKey (key) {
-    const encodedKey = base32.encode(new Uint8Array(key))
-    return encodedKey.toLowerCase().replace(/(\w{4})/g, '$1 ').trim()
-  }
-
-  decodeKey (key) {
-    const decodedKey = base32.decode(key.replace(/\W+/g, ''))
-    return this.stringToArrayBuffer(decodedKey)
-  }
-
-  stringToArrayBuffer (str) {
-    const buffer = new ArrayBuffer(str.length * 2)
-    let bufferView = new Uint16Array(buffer)
-
-    for (let i = 0; i < str.length; ++i) {
-      bufferView[i] = str.charCodeAt(i)
-    }
-
-    return buffer
-  }
-
-  generateCounterBasedToken (key, counter) {
-    const buffer = this.intToArrayBuffer(counter)
-    return this.sign(key, buffer).then(buffer => {
-      const signature = new Uint8Array(buffer)
-      const offset = signature[19] & 0xf
-
-      let truncated = (signature[offset] & 0x7f) << 24 |
-        (signature[offset + 1] & 0xff) << 16 |
-        (signature[offset + 2] & 0xff) << 8 |
-        (signature[offset + 3] & 0xff)
-
-      truncated = (truncated % 1000000).toString()
-
-      return ('000000' + truncated).substring(truncated.length)
+    this.$secret.on('input', () => {
+      const secret = this.$secret.text()
+      const buffer = this.crypto.decodeKey(secret)
+      this.crypto.importKey(buffer).then(key => {
+        this.key = key
+        this.secret = secret
+        this.refreshToken()
+      }).catch(() => {
+        // todo
+        this.$secret.css('border-color', '#e16057')
+      })
     })
   }
 
-  intToArrayBuffer (n) {
-    const buffer = new ArrayBuffer(4)
-    let bufferView = new Uint32Array(buffer)
-    bufferView[0] = n
-
-    return buffer
+  getPercentage () {
+    const now = Date.now() / 1000
+    return (now / this.period - Math.floor(now / this.period)) * 100
   }
 
-  verifyCounterBasedToken (token, key, counter) {
-    return this.generateCounterBasedToken(key, counter).then(newToken => {
-      return newToken === token
-    })
-  }
-
-  generateTimeBasedToken (key) {
-    const now = Date.now()
-    const counter = Math.floor((now / 1000) / this.period)
-
-    return this.generateCounterBasedToken(key, counter)
-  }
-
-  verifyTimeBasedToken (token, key) {
-    const now = Date.now()
-    const counter = Math.floor((now / 1000) / this.period)
-
-    const promises = []
-
-    for (let currentCounter = counter - this.window * this.period;
-         currentCounter <= counter + this.window * this.period * 2; ++currentCounter) {
-      promises.push(this.generateCounterBasedToken(key, currentCounter))
-    }
-
-    return Promise.all(promises).then(tokens => {
-      for (let i = 0; i < tokens.length; ++i) {
-        if (tokens[i] === token) {
-          return true
-        }
-      }
-      return false
+  refreshToken () {
+    this.crypto.generateTimeBasedToken(this.key, this.period).then(token => {
+      this.$token.text(token)
+      // todo Highlight the token
     })
   }
 }
