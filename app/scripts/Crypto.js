@@ -30,7 +30,7 @@ class Crypto {
   }
 
   encodeKey (key) {
-    return base32.encode(new Uint8Array(key)).toString()
+    return base32.encode(key).toString().replace(/=/g, '')
   }
 
   prettyEncodeKey (key) {
@@ -38,33 +38,36 @@ class Crypto {
   }
 
   decodeKey (key) {
-    const decodedKey = base32.decode(key.replace(/\W+/g, ''))
-    return decodedKey
+    return base32.decode(key.replace(/\W+/g, ''))
   }
 
   generateCounterBasedToken (key, counter) {
-    const buffer = this.intToArrayBuffer(counter)
-    return this.sign(key, buffer).then(buffer => {
+    const counterBuffer = this.intToBuffer(counter)
+    return this.sign(key, counterBuffer).then(buffer => {
       const signature = new Uint8Array(buffer)
-      const offset = signature[19] & 0xf
+      const offset = signature[signature.length - 1] & 0xf
 
-      let truncated = (signature[offset] & 0x7f) << 24 |
+      const binary = (signature[offset] & 0x7f) << 24 |
         (signature[offset + 1] & 0xff) << 16 |
         (signature[offset + 2] & 0xff) << 8 |
         (signature[offset + 3] & 0xff)
 
-      truncated = (truncated % 1000000).toString()
+      const otp = binary % 1000000
+      const result = otp.toString()
 
-      return ('000000' + truncated).substring(truncated.length)
+      return ('000000' + result).substring(result.length)
     })
   }
 
-  intToArrayBuffer (n) {
-    const buffer = new ArrayBuffer(4)
-    let bufferView = new Uint32Array(buffer)
-    bufferView[0] = n
+  intToBuffer (n) {
+    const bytes = []
 
-    return buffer
+    for (let i = 7; i >= 0; --i) {
+      bytes[i] = n & 0xff
+      n >>= 8
+    }
+
+    return new Uint8Array(bytes)
   }
 
   verifyCounterBasedToken (token, key, counter) {
@@ -76,7 +79,6 @@ class Crypto {
   generateTimeBasedToken (key, period) {
     const now = Date.now() / 1000
     const counter = Math.floor(now / period)
-
     return this.generateCounterBasedToken(key, counter)
   }
 

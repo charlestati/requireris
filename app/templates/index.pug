@@ -1,10 +1,7 @@
 extends layout
 
 block content
-  .timer
-    .token-wrapper
-      p.token
-      input.secret(type='text')
-      p.error La clé n'est pas valide
-    svg(viewBox='0 0 200 200')
-      circle.circle(cx='100', cy='100', r='5rem', transform='rotate(-90, 100, 100)')
+  p.error La clé n'est pas valide
+  input.secret(type='text')
+  p.token …
+  button.generate(type='button') Générer

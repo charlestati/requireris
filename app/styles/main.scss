@@ -1,41 +1,57 @@
-$gulp-blue: #3a455d;
-$white: #ffffff;
 $athens-gray: #eef1f3;
 $athens-gray-dark: #dcdfe1;
 $limeade: #75b800;
 
+$monospace: "Lucida Console", Monaco, Courier, monospace;
+$helvetica: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+
 body {
-  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   height: 100vh;
-  background-color: $gulp-blue;
-  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
-  font-weight: 300;
+  margin: 0;
+  padding: 0 5vw;
+  background-color: $athens-gray;
 }
 
-@import "timer";
+.error {
+  visibility: hidden;
+  opacity: 0;
+  margin: 0 auto;
+  color: #e16057;
+  font-family: $helvetica;
+}
 
-.token-wrapper {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin-left: -100px;
-  margin-top: -50px;
-  width: 200px;
-  height: 100px;
-  text-align: center;
-  line-height: 100px;
+.secret {
+  display: block;
+  width: 20rem;
+  max-width: calc(100% - 30px);
+  margin: 2rem auto;
+  padding: 15px;
+  border: none;
+  background-color: $athens-gray-dark;
+  text-overflow: ellipsis;
+  font-family: $monospace;
+  color: #333333;
+}
 
-  background-color: green;
+.token {
+  display: block;
+  margin: 0 auto;
+  color: $limeade;
+  font-family: $monospace;
+  font-size: 4rem;
+}
 
-  .token {
-    margin: 0;
-  }
-
-  .secret {
-    display: none;
-  }
-  .error {
-    display: none;
-    color: #e16057;
-  }
+.generate {
+  display: block;
+  width: 10rem;
+  max-width: 100%;
+  margin: 2rem auto;
+  padding: 15px;
+  border: none;
+  background-color: $athens-gray-dark;
+  font-family: $helvetica;
+  font-size: 1rem;
 }

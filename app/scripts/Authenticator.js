@@ -1,67 +1,46 @@
 import Crypto from './Crypto'
-import Timer from './Timer'
 
 class Authenticator {
   constructor () {
-    this.period = 10
+    this.period = 30
     this.crypto = new Crypto()
-    this.timer = new Timer(this.period)
     this.$secret = $('.secret')
+    this.$error = $('.error')
     this.$token = $('.token')
+    this.$button = $('.generate')
   }
 
   start () {
     this.crypto.generateKey().then(key => {
       this.key = key
-      const percentage = this.getPercentage()
-      const currentStep = percentage * this.period / 100
-      this.timer.setStep(Math.ceil(currentStep))
-      const delay = (1 - (currentStep % 1)) * 1000
-
-      console.log(percentage)
-      console.log(currentStep)
-      console.log(Math.ceil(currentStep))
-      console.log(delay)
-
-      setTimeout(() => {
-        this.timer.start()
-        this.refreshToken()
-        setInterval(() => {
-          this.refreshToken()
-        }, this.period * 1000)
-      }, delay)
-
       this.refreshToken()
-
       this.crypto.exportKey(key).then(keydata => {
         this.secret = this.crypto.encodeKey(keydata)
-        this.$secret.text(this.secret)
+        this.$secret.val(this.secret)
       })
     })
 
     this.$secret.on('input', () => {
-      const secret = this.$secret.text()
+      const secret = this.$secret.val()
       const buffer = this.crypto.decodeKey(secret)
       this.crypto.importKey(buffer).then(key => {
+        this.$error.animate({ opacity: 0, visibility: 'hidden' }, 200)
         this.key = key
         this.secret = secret
         this.refreshToken()
       }).catch(() => {
-        // todo
-        this.$secret.css('border-color', '#e16057')
+        this.$error.css({ visibility: 'visible' }).animate({ opacity: 1 }, 200)
       })
     })
-  }
 
-  getPercentage () {
-    const now = Date.now() / 1000
-    return (now / this.period - Math.floor(now / this.period)) * 100
+    this.$button.click(() => {
+      this.refreshToken()
+    })
   }
 
   refreshToken () {
     this.crypto.generateTimeBasedToken(this.key, this.period).then(token => {
       this.$token.text(token)
-      // todo Highlight the token
     })
   }
 }
