@@ -34,6 +34,7 @@ body {
   text-overflow: ellipsis;
   font-family: $monospace;
   color: #333333;
+  border-radius: 3px;
 }
 
 .token {
@@ -54,4 +55,11 @@ body {
   background-color: $athens-gray-dark;
   font-family: $helvetica;
   font-size: 1rem;
+  border-radius: 3px;
+}
+
+.qrcode {
+  width: 50vw;
+  max-width: 300px;
+  margin: 0 auto;
 }

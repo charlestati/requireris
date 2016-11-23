@@ -1,3 +1,4 @@
+import qr from 'qr-image'
 import Crypto from './Crypto'
 
 class Authenticator {
@@ -16,6 +17,7 @@ class Authenticator {
       this.refreshToken()
       this.crypto.exportKey(key).then(keydata => {
         this.secret = this.crypto.encodeKey(keydata)
+        this.refreshQrCode(this.secret)
         this.$secret.val(this.secret)
       })
     })
@@ -27,6 +29,7 @@ class Authenticator {
         this.$error.animate({ opacity: 0, visibility: 'hidden' }, 200)
         this.key = key
         this.secret = secret
+        this.refreshQrCode(this.secret)
         this.refreshToken()
       }).catch(() => {
         this.$error.css({ visibility: 'visible' }).animate({ opacity: 1 }, 200)
@@ -42,6 +45,12 @@ class Authenticator {
     this.crypto.generateTimeBasedToken(this.key, this.period).then(token => {
       this.$token.text(token)
     })
+  }
+
+  refreshQrCode (secret) {
+    const uri = `otpauth://totp/Requireris:requireris@google.com?secret=${secret}&issuer=Requireris`
+    const code = qr.imageSync(uri, { type: 'svg' })
+    $('.qrcode').html(code)
   }
 }
 
